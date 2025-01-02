@@ -1,0 +1,66 @@
+type Query {
+    getAllTrails: [TrailDto]
+    getTrailById(id: String): TrailDto
+    getSavedTrails : [TrailDto]
+    getUserTrails: [TrailDto]
+}
+
+type Mutation {
+    createTrail(trailInput: TrailInput) : TrailDto
+    addReview(trailId: String, reviewInput: ReviewInput) : Boolean
+    markTrailAsSaved(trailId: String) : Boolean
+    unmarkTrail(trailId: String) : Boolean
+}
+
+input TrailInput {
+    title: String!
+    difficulty: String!
+    estimatedHikingTime: EstimatedHikingTimeInput!
+    description: String!
+    gpxTrailUrl: String!
+    elevation: Int!
+    distance: Float!
+    maxHeight: Int!
+    photosUrl: [String] = []
+}
+
+input ReviewInput {
+    mark: Int!,
+    description: String,
+    photosUrl: [String] = []
+}
+
+input EstimatedHikingTimeInput {
+    hours: Int!
+    minutes: Int!
+}
+
+type TrailDto {
+    id: String
+    title: String
+    difficulty: String
+    rating: Float
+    numberOfRatings: Int
+    photos: [String]
+    distance: Float
+    elevationGain: Int
+    maxHeight: Int
+    description: String
+    estimatedHikingTime: EstimatedHikingTimeDto
+    gpxUrl: String
+    comments: [CommentDto]
+    isMarked: Boolean
+}
+
+type EstimatedHikingTimeDto {
+    hours: Int
+    minutes: Int
+}
+
+type CommentDto {
+    userAvatarUrl: String
+    username: String
+    rating: Int
+    commentDate: String
+    comment: String
+}

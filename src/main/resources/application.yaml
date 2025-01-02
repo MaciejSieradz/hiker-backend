@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: hiker
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: hiker
+  cloud:
+    aws:
+      s3:
+        region: eu-north-1
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://accounts.google.com
+          jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+
+aws-url: https://hiker.s3.eu-north-1.amazonaws.com/
