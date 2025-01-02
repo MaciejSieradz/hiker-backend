@@ -1,6 +1,13 @@
 package com.example.hiker.dto;
 
-import lombok.Data;
+import java.util.List;
 
-public record CommentDto(String userAvatarUrl, String username, int rating, String commentDate, String comment) {
+public record CommentDto(
+        String userAvatarUrl,
+        String username,
+        int rating,
+        String commentDate,
+        String comment,
+        List<String> photosUrl
+) {
 }

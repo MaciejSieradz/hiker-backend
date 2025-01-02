@@ -7,6 +7,8 @@ type Query {
 
 type Mutation {
     createTrail(trailInput: TrailInput) : TrailDto
+    updateTrail(id: String, trailInput: TrailInput) : TrailDto
+    deleteTrail(id: String) : Boolean
     addReview(trailId: String, reviewInput: ReviewInput) : Boolean
     markTrailAsSaved(trailId: String) : Boolean
     unmarkTrail(trailId: String) : Boolean
@@ -63,4 +65,5 @@ type CommentDto {
     rating: Int
     commentDate: String
     comment: String
+    photosUrl: [String]
 }

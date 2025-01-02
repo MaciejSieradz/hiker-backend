@@ -12,5 +12,7 @@ public interface TrailService {
     Flux<TrailDto> getUserTrails(String email);
     Mono<TrailDto> getTrailById(String id, String email);
     Mono<TrailDto> createTrail(TrailInput trailInput, String email);
+    Mono<Boolean> deleteTrail(String id, String email);
+    Mono<TrailDto> updateTrail(String id, String email, TrailInput trailInput);
     Mono<Boolean> addReview(String trailId, ReviewInput reviewInput, String email);
 }

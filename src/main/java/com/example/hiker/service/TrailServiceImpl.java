@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -72,6 +73,40 @@ public class TrailServiceImpl implements TrailService {
                                 }));
     }
 
+    @Override
+    public Mono<Boolean> deleteTrail(String id, String email) {
+        return trailRepository.findById(id).flatMap(trail -> {
+            if (trail.getUserEmail().equals(email)) {
+                return trailRepository.delete(trail).thenReturn(true);
+            } else {
+                return Mono.just(false);
+            }
+        });
+    }
+
+    @Override
+    public Mono<TrailDto> updateTrail(String id, String email, TrailInput trailInput) {
+        return trailRepository.findById(id).flatMap(trail -> {
+            if (trailInput.title() != null) trail.setTitle(trailInput.title());
+            if (trailInput.difficulty() != null) trail.setDifficulty(trailInput.difficulty());
+            if (trailInput.estimatedHikingTime() != null) {
+                trail.setEstimatedHikingTime(
+                        new EstimatedHikingTime(
+                                trailInput.estimatedHikingTime().hours(),
+                                trailInput.estimatedHikingTime().minutes())
+                );
+            }
+            if (trailInput.description() != null) trail.setDescription(trailInput.description());
+            if (trailInput.gpxTrailUrl() != null) trail.setGpxUrl(trailInput.gpxTrailUrl());
+            if (!trailInput.photosUrl().isEmpty()) trail.setPhotosUrl(trailInput.photosUrl());
+            trail.setElevationGain(trailInput.elevation());
+            trail.setMaxHeight(trailInput.maxHeight());
+            trail.setDistance(trailInput.distance());
+
+            return trailRepository.save(trail);
+        }).flatMap(this::convertTrailToTrailDto);
+    }
+
     private Mono<User> createDefaultUser(String email) {
         User newUser = new User();
         newUser.setEmail(email);
@@ -84,7 +119,8 @@ public class TrailServiceImpl implements TrailService {
         review.setRating(reviewInput.mark());
         review.setComment(reviewInput.description());
         review.setCreatedAt(Instant.now());
-        review.setAuthorId(author.getId());
+        review.setAuthorEmail(author.getEmail());
+        review.setPhotosUrl(reviewInput.photosUrl());
         return review;
     }
 
@@ -106,13 +142,14 @@ public class TrailServiceImpl implements TrailService {
 
     private Mono<TrailDto> convertToTrailDto(Trail trail, Boolean isMarked) {
         return Flux.fromIterable(trail.getReviews())
-                .flatMap(review -> userRepository.findById(review.getAuthorId())
+                .flatMap(review -> userRepository.findByEmail(review.getAuthorEmail())
                         .map(user -> new CommentDto(
                                 user.getAvatarUrl(),
                                 user.getUsername(),
                                 review.getRating(),
                                 review.getCreatedAt().toString(),
-                                review.getComment()
+                                review.getComment(),
+                                review.getPhotosUrl()
                         )))
                 .collectList()
                 .map(comments -> TrailDto.builder()
@@ -126,6 +163,8 @@ public class TrailServiceImpl implements TrailService {
                         .estimatedHikingTime(trail.getEstimatedHikingTime())
                         .photos(trail.getPhotosUrl())
                         .gpxUrl(trail.getGpxUrl())
+                        .rating(ratingFromComments(comments))
+                        .numberOfRatings(comments.size())
                         .isMarked(isMarked)
                         .comments(comments)
                         .build());
@@ -133,14 +172,15 @@ public class TrailServiceImpl implements TrailService {
 
     private Mono<TrailDto> convertTrailToTrailDto(Trail trail) {
         return Flux.fromIterable(trail.getReviews())
-                .flatMap(review -> userRepository.findById(review.getAuthorId())
-                .map(user -> new CommentDto(
-                        user.getAvatarUrl(),
-                        user.getUsername(),
-                        review.getRating(),
-                        review.getCreatedAt().toString(),
-                        review.getComment()
-                )))
+                .flatMap(review -> userRepository.findByEmail(review.getAuthorEmail())
+                        .map(user -> new CommentDto(
+                                user.getAvatarUrl(),
+                                user.getUsername(),
+                                review.getRating(),
+                                review.getCreatedAt().toString(),
+                                review.getComment(),
+                                review.getPhotosUrl()
+                        )))
                 .collectList()
                 .map(comments -> TrailDto.builder()
                         .id(trail.getId())
@@ -153,8 +193,16 @@ public class TrailServiceImpl implements TrailService {
                         .estimatedHikingTime(trail.getEstimatedHikingTime())
                         .photos(trail.getPhotosUrl())
                         .gpxUrl(trail.getGpxUrl())
+                        .rating(ratingFromComments(comments))
+                        .numberOfRatings(comments.size())
                         .comments(comments)
                         .build())
                 .doOnNext(trailDto -> log.info("Trail: {}", trailDto));
+    }
+
+    private double ratingFromComments(List<CommentDto> comments)  {
+        var numberOfComments = comments.size();
+        if (numberOfComments == 0) return 0;
+        return (double) comments.stream().map(CommentDto::rating).mapToInt(Integer::intValue).sum() / numberOfComments;
     }
 }

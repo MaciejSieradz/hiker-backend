@@ -26,6 +26,7 @@ public class TrailGraphQLController {
 
     @QueryMapping("getAllTrails")
     public Flux<TrailDto> getAllTrails() {
+        log.info("Getting all trails");
         return trailService.getAllTrails();
     }
 
@@ -48,10 +49,22 @@ public class TrailGraphQLController {
         return trailService.getUserTrails(email);
     }
 
-    @MutationMapping("createTrail")
+    @MutationMapping
     public Mono<TrailDto> createTrail(@Argument TrailInput trailInput, Authentication authentication) {
         var email = retrieveEmailFromAuthentication(authentication);
         return trailService.createTrail(trailInput, email);
+    }
+
+    @MutationMapping
+    public Mono<Boolean> deleteTrail(@Argument String id, Authentication authentication) {
+        var email = retrieveEmailFromAuthentication(authentication);
+        return trailService.deleteTrail(id, email);
+    }
+
+    @MutationMapping
+    public Mono<TrailDto> updateTrail(@Argument String id, @Argument TrailInput trailInput, Authentication authentication) {
+        var email = retrieveEmailFromAuthentication(authentication);
+        return trailService.updateTrail(id, email, trailInput);
     }
 
     @MutationMapping("addReview")
