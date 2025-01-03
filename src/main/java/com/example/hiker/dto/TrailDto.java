@@ -21,7 +21,7 @@ public class TrailDto {
     private final int maxHeight;
     private final String description;
     private final EstimatedHikingTime estimatedHikingTime;
-    private final List<CommentDto> comments;
+    private final List<ReviewDto> comments;
     private final String gpxUrl;
     private final boolean isMarked;
 }

@@ -1,6 +1,6 @@
 package com.example.hiker.service;
 
-import com.example.hiker.dto.CommentDto;
+import com.example.hiker.dto.ReviewDto;
 import com.example.hiker.dto.ReviewInput;
 import com.example.hiker.dto.TrailDto;
 import com.example.hiker.dto.TrailInput;
@@ -143,7 +143,7 @@ public class TrailServiceImpl implements TrailService {
     private Mono<TrailDto> convertToTrailDto(Trail trail, Boolean isMarked) {
         return Flux.fromIterable(trail.getReviews())
                 .flatMap(review -> userRepository.findByEmail(review.getAuthorEmail())
-                        .map(user -> new CommentDto(
+                        .map(user -> new ReviewDto(
                                 user.getAvatarUrl(),
                                 user.getUsername(),
                                 review.getRating(),
@@ -173,7 +173,7 @@ public class TrailServiceImpl implements TrailService {
     private Mono<TrailDto> convertTrailToTrailDto(Trail trail) {
         return Flux.fromIterable(trail.getReviews())
                 .flatMap(review -> userRepository.findByEmail(review.getAuthorEmail())
-                        .map(user -> new CommentDto(
+                        .map(user -> new ReviewDto(
                                 user.getAvatarUrl(),
                                 user.getUsername(),
                                 review.getRating(),
@@ -200,9 +200,9 @@ public class TrailServiceImpl implements TrailService {
                 .doOnNext(trailDto -> log.info("Trail: {}", trailDto));
     }
 
-    private double ratingFromComments(List<CommentDto> comments)  {
+    private double ratingFromComments(List<ReviewDto> comments)  {
         var numberOfComments = comments.size();
         if (numberOfComments == 0) return 0;
-        return (double) comments.stream().map(CommentDto::rating).mapToInt(Integer::intValue).sum() / numberOfComments;
+        return (double) comments.stream().map(ReviewDto::rating).mapToInt(Integer::intValue).sum() / numberOfComments;
     }
 }
